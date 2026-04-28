@@ -1,0 +1,109 @@
+{
+  "title": "ZigStar Gateway Control",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add ZigStar gateway",
+        "data": {
+          "host": "IP address or host"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the gateway",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This gateway is already configured"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "socket_connected": {
+        "name": "Zigbee socket connected"
+      },
+      "ethernet_connected": {
+        "name": "Ethernet connected"
+      },
+      "mqtt_connected": {
+        "name": "MQTT connected"
+      }
+    },
+    "sensor": {
+      "backend": {
+        "name": "Backend"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "socket_clients": {
+        "name": "Zigbee socket clients"
+      },
+      "socket_connected_for": {
+        "name": "Zigbee socket connected for"
+      },
+      "socket_port": {
+        "name": "Zigbee socket port"
+      },
+      "serial_baud": {
+        "name": "Serial baud rate"
+      },
+      "operational_mode": {
+        "name": "Operational mode"
+      },
+      "ethernet_speed": {
+        "name": "Ethernet speed"
+      },
+      "ethernet_ip": {
+        "name": "Ethernet IP"
+      },
+      "mqtt_broker": {
+        "name": "MQTT broker"
+      },
+      "esp_firmware": {
+        "name": "ESP firmware"
+      },
+      "esp_model": {
+        "name": "ESP model"
+      },
+      "esp_flash_size": {
+        "name": "ESP flash size"
+      },
+      "heap_used": {
+        "name": "Heap used"
+      },
+      "heap_usage": {
+        "name": "Heap usage"
+      },
+      "fs_usage": {
+        "name": "File system usage"
+      },
+      "nvs_usage": {
+        "name": "NVS usage"
+      },
+      "zigbee_role": {
+        "name": "Zigbee role"
+      },
+      "zigbee_firmware": {
+        "name": "Zigbee firmware"
+      },
+      "zigbee_hardware": {
+        "name": "Zigbee hardware"
+      },
+      "zigbee_ieee": {
+        "name": "Zigbee IEEE"
+      },
+      "zigbee_flash_size": {
+        "name": "Zigbee flash size"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Restart gateway"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "domain": "zigstar_gateway_control",
+  "name": "ZigStar Gateway Control",
+  "codeowners": ["@ivaschru"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/ivaschru/ha-zigstar-gateway-control",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/ivaschru/ha-zigstar-gateway-control/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

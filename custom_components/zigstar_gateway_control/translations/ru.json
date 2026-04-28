@@ -1,0 +1,109 @@
+{
+  "title": "ZigStar Gateway Control",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Добавить ZigStar gateway",
+        "data": {
+          "host": "IP-адрес или хост"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Не удалось подключиться к gateway",
+      "unknown": "Неожиданная ошибка"
+    },
+    "abort": {
+      "already_configured": "Этот gateway уже настроен"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "socket_connected": {
+        "name": "Zigbee socket подключен"
+      },
+      "ethernet_connected": {
+        "name": "Ethernet подключен"
+      },
+      "mqtt_connected": {
+        "name": "MQTT подключен"
+      }
+    },
+    "sensor": {
+      "backend": {
+        "name": "Backend"
+      },
+      "device_temperature": {
+        "name": "Температура устройства"
+      },
+      "uptime": {
+        "name": "Время работы"
+      },
+      "socket_clients": {
+        "name": "Клиенты Zigbee socket"
+      },
+      "socket_connected_for": {
+        "name": "Zigbee socket подключен в течение"
+      },
+      "socket_port": {
+        "name": "Порт Zigbee socket"
+      },
+      "serial_baud": {
+        "name": "Скорость serial"
+      },
+      "operational_mode": {
+        "name": "Режим работы"
+      },
+      "ethernet_speed": {
+        "name": "Скорость Ethernet"
+      },
+      "ethernet_ip": {
+        "name": "Ethernet IP"
+      },
+      "mqtt_broker": {
+        "name": "MQTT broker"
+      },
+      "esp_firmware": {
+        "name": "ESP прошивка"
+      },
+      "esp_model": {
+        "name": "ESP модель"
+      },
+      "esp_flash_size": {
+        "name": "ESP flash"
+      },
+      "heap_used": {
+        "name": "Heap занято"
+      },
+      "heap_usage": {
+        "name": "Heap использование"
+      },
+      "fs_usage": {
+        "name": "Использование файловой системы"
+      },
+      "nvs_usage": {
+        "name": "Использование NVS"
+      },
+      "zigbee_role": {
+        "name": "Роль Zigbee"
+      },
+      "zigbee_firmware": {
+        "name": "Zigbee прошивка"
+      },
+      "zigbee_hardware": {
+        "name": "Zigbee hardware"
+      },
+      "zigbee_ieee": {
+        "name": "Zigbee IEEE"
+      },
+      "zigbee_flash_size": {
+        "name": "Zigbee flash"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Перезапустить gateway"
+      }
+    }
+  }
+}

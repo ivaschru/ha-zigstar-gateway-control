@@ -1,0 +1,46 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    name: Python checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile integration
+        run: python -m compileall custom_components/zigstar_gateway_control tests
+      - name: Run parser tests
+        run: |
+          python - <<'PY'
+          from tests.test_parsing import (
+              test_parse_duration_text,
+              test_parse_legacy_status_html,
+              test_parse_legacy_serial_html,
+              test_parse_numeric,
+              test_parse_xzg_root_payload,
+              test_xzg_device_info,
+          )
+
+          test_parse_duration_text()
+          test_parse_legacy_status_html()
+          test_parse_legacy_serial_html()
+          test_parse_numeric()
+          test_parse_xzg_root_payload()
+          test_xzg_device_info()
+          print("parser tests passed")
+          PY
+
+  hacs:
+    name: HACS validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration
