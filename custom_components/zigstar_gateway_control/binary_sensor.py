@@ -38,6 +38,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[ZigStarGatewayBinarySensorDescription, ...] = 
     ZigStarGatewayBinarySensorDescription(
         key="socket_connected",
         translation_key="socket_connected",
+        icon="mdi:lan-connect",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_key="socket_connected",
@@ -45,6 +46,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[ZigStarGatewayBinarySensorDescription, ...] = 
     ZigStarGatewayBinarySensorDescription(
         key="ethernet_connected",
         translation_key="ethernet_connected",
+        icon="mdi:ethernet",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_key="ethernet_connected",
@@ -52,6 +54,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[ZigStarGatewayBinarySensorDescription, ...] = 
     ZigStarGatewayBinarySensorDescription(
         key="mqtt_connected",
         translation_key="mqtt_connected",
+        icon="mdi:message-badge",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_key="mqtt_connected",

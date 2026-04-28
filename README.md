@@ -37,6 +37,7 @@ Common entities include:
 - Serial baud rate
 - Device temperature
 - Uptime
+- Uptime seconds
 - Ethernet connected
 - Ethernet speed
 - Ethernet IP
@@ -56,6 +57,10 @@ Common entities include:
 - Zigbee flash size
 
 XZG and legacy ZigStar GW RUS devices also create a restart button.
+
+The dashboard-oriented uptime entity is reported in days. The raw seconds uptime
+entity and low-level diagnostic metadata are disabled by default and can be
+enabled from the Home Assistant entity registry when needed.
 
 ## Installation with HACS
 

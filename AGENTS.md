@@ -26,5 +26,6 @@
 ## Maintenance Notes
 
 - Keep `README.md`, `hacs.json`, and `manifest.json` in sync when changing installation requirements or supported features.
+- Keep entity icon/default-enable decisions close to the entity descriptions in `sensor.py`, `binary_sensor.py`, and `button.py`.
 - Keep code comments explicit around reverse-engineered endpoint quirks.
 - Update this file whenever the project structure or safety posture changes.

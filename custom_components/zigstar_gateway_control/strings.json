@@ -37,6 +37,9 @@
         "name": "Device temperature"
       },
       "uptime": {
+        "name": "Uptime seconds"
+      },
+      "uptime_days": {
         "name": "Uptime"
       },
       "socket_clients": {
