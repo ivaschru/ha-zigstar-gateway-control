@@ -12,6 +12,7 @@ import aiohttp
 
 from .const import DEFAULT_TIMEOUT
 from .parsing import (
+    BACKEND_LEGACY_RUS,
     BACKEND_XZG,
     ZigStarDeviceInfo,
     device_info_from_payload,
@@ -60,8 +61,11 @@ class ZigStarGatewayApi:
 
     @property
     def supports_restart(self) -> bool:
-        """Return true when the detected backend has a known safe restart command."""
-        return bool(self._last_payload and self._last_payload.get("backend") == BACKEND_XZG)
+        """Return true when the detected backend has a known restart command."""
+        return bool(
+            self._last_payload
+            and self._last_payload.get("backend") in {BACKEND_XZG, BACKEND_LEGACY_RUS}
+        )
 
     async def async_fetch_device_info(self) -> ZigStarDeviceInfo:
         """Fetch a status snapshot and return static device metadata."""
@@ -80,14 +84,25 @@ class ZigStarGatewayApi:
         return payload
 
     async def async_restart(self) -> None:
-        """Ask an XZG gateway to restart the ESP32 controller."""
+        """Ask the gateway to restart its ESP32 controller."""
         if not self.supports_restart:
-            raise ZigStarGatewayConnectionError("Restart is only supported for XZG firmware")
+            raise ZigStarGatewayConnectionError("Restart is not supported for this firmware")
 
-        # XZG's JavaScript names command 3 as CMD_ESP_RES. It restarts the
-        # gateway controller and temporarily disconnects any Zigbee socket.
+        backend = self._last_payload.get("backend") if self._last_payload else None
+        if backend == BACKEND_XZG:
+            # XZG's JavaScript names command 3 as CMD_ESP_RES. It restarts the
+            # gateway controller and temporarily disconnects any Zigbee socket.
+            restart_path = "api?action=8&cmd=3"
+        elif backend == BACKEND_LEGACY_RUS:
+            # Legacy ZigStar GW RUS executes /reboot immediately. Keeping this
+            # behind Home Assistant's ButtonEntity preserves the expected
+            # "press means restart" behavior while avoiding discovery probes.
+            restart_path = "reboot"
+        else:
+            raise ZigStarGatewayConnectionError("Restart is not supported for this firmware")
+
         try:
-            await self._async_request_text("GET", "api?action=8&cmd=3")
+            await self._async_request_text("GET", restart_path)
         except ZigStarGatewayConnectionError as err:
             # A successful restart may close the HTTP connection before a clean
             # response is received, so this is logged as debug and not fatal.

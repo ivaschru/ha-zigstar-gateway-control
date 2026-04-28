@@ -4,7 +4,7 @@
 
 - This repository contains a Home Assistant custom integration for managing ZigStar Gateway and XZG gateway devices.
 - The integration is intended for HACS installation and local LAN operation.
-- Supported functionality starts deliberately narrow: monitoring gateway health plus safe restart control for XZG firmware.
+- Supported functionality starts deliberately narrow: monitoring gateway health plus restart control for XZG and legacy ZigStar GW RUS firmware.
 
 ## Repository Layout
 
@@ -21,7 +21,7 @@
 - Never commit real Home Assistant tokens, gateway web passwords, MQTT passwords, cookies, SSH keys, or endpoint-specific secrets.
 - The config flow must not ask for MQTT credentials and must not read configuration pages that expose password values unless a future feature explicitly needs it.
 - Management actions must be opt-in Home Assistant buttons and should stay limited to low-blast-radius operations.
-- Legacy ZigStar GW RUS reboot endpoints are known to execute immediately; do not expose them unless the user explicitly asks for legacy reboot control.
+- Legacy ZigStar GW RUS reboot endpoints are known to execute immediately; expose them only through the explicit Home Assistant restart button path.
 
 ## Maintenance Notes
 

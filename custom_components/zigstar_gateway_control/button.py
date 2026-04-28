@@ -33,7 +33,7 @@ async def async_setup_entry(
 
 
 class ZigStarGatewayRestartButton(ZigStarGatewayEntity, ButtonEntity):
-    """Button that restarts the ESP32 controller on XZG firmware."""
+    """Button that restarts the ESP32 controller on supported firmware."""
 
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
