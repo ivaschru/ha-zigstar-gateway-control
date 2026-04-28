@@ -19,6 +19,8 @@ jobs:
         run: |
           python - <<'PY'
           from tests.test_parsing import (
+              test_cookie_header_from_empty_headers,
+              test_cookie_header_from_set_cookie_headers,
               test_parse_duration_text,
               test_parse_legacy_status_html,
               test_parse_legacy_serial_html,
@@ -27,6 +29,8 @@ jobs:
               test_xzg_device_info,
           )
 
+          test_cookie_header_from_empty_headers()
+          test_cookie_header_from_set_cookie_headers()
           test_parse_duration_text()
           test_parse_legacy_status_html()
           test_parse_legacy_serial_html()

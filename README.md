@@ -7,6 +7,7 @@ The integration is intended for HACS installation and does not use any cloud ser
 ## Features
 
 - Add multiple gateways through the Home Assistant UI.
+- Connect to XZG devices with or without web UI authentication enabled.
 - Monitor Zigbee socket connectivity and connected client count.
 - Monitor ESP32 uptime, temperature, heap usage, file system usage, firmware and hardware metadata.
 - Monitor Ethernet and MQTT connection status.
@@ -72,7 +73,8 @@ enabled from the Home Assistant entity registry when needed.
 6. Go to **Settings -> Devices & services -> Add integration**.
 7. Search for `ZigStar Gateway Control`.
 8. Add one gateway by entering its IP address or hostname.
-9. Repeat the add integration flow for every additional gateway.
+9. If XZG web server authentication is enabled, also enter the web UI username and password. Leave both fields empty for gateways without web authentication.
+10. Repeat the add integration flow for every additional gateway.
 
 ## Manual Installation
 
@@ -83,6 +85,7 @@ Copy `custom_components/zigstar_gateway_control` into your Home Assistant `custo
 - The integration polls local HTTP endpoints every 30 seconds.
 - XZG status is read from `GET /api?action=1&param=root` and `GET /api?action=1&param=update_root`.
 - XZG serial settings are read from the `respValuesArr` header of `GET /api?action=0&page=3`.
+- XZG web UI authentication is handled through `POST /login` with a stored `XZG_UID` cookie. The integration does not read the XZG security settings page because that page can expose configured web credentials in response headers.
 - Legacy ZigStar GW RUS status is parsed from `/` and serial settings from `/serial`.
 - The restart button is exposed for XZG and legacy firmware. XZG calls `GET /api?action=8&cmd=3`; legacy ZigStar GW RUS calls `GET /reboot`, which executes immediately and temporarily disconnects the gateway.
 - This integration manages the gateway device itself. It does not replace ZHA or Zigbee2MQTT and does not manage Zigbee end devices.
@@ -92,6 +95,7 @@ Copy `custom_components/zigstar_gateway_control` into your Home Assistant `custo
 If setup fails:
 
 - Check that Home Assistant can reach the gateway IP address over plain HTTP on port `80`.
+- If XZG web authentication is enabled, confirm the username and password work in the gateway web UI from the same network.
 - Check that the Zigbee socket port, usually `6638`, is open from the Home Assistant host.
 - Open the gateway web UI from the same network and confirm the device is responsive.
 

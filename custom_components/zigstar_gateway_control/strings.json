@@ -5,12 +5,16 @@
       "user": {
         "title": "Add ZigStar gateway",
         "data": {
-          "host": "IP address or host"
+          "host": "IP address or host",
+          "username": "Web UI username",
+          "password": "Web UI password"
         }
       }
     },
     "error": {
       "cannot_connect": "Unable to connect to the gateway",
+      "credentials_incomplete": "Enter both username and password, or leave both empty",
+      "invalid_auth": "Web UI authentication failed",
       "unknown": "Unexpected error"
     },
     "abort": {

@@ -15,6 +15,7 @@ from .parsing import (
     BACKEND_LEGACY_RUS,
     BACKEND_XZG,
     ZigStarDeviceInfo,
+    cookie_header_from_set_cookie_headers,
     device_info_from_payload,
     normalize_base_url,
     normalize_xzg_payload,
@@ -34,6 +35,10 @@ class ZigStarGatewayConnectionError(ZigStarGatewayError):
     """Raised when a gateway cannot be reached or returns unusable data."""
 
 
+class ZigStarGatewayAuthError(ZigStarGatewayError):
+    """Raised when the gateway requires or rejects web UI credentials."""
+
+
 class ZigStarGatewayApi:
     """Small async client for one ZigStar/XZG gateway."""
 
@@ -42,6 +47,8 @@ class ZigStarGatewayApi:
         *,
         session: aiohttp.ClientSession,
         host: str,
+        username: str | None = None,
+        password: str | None = None,
         timeout: int = DEFAULT_TIMEOUT,
     ) -> None:
         """Initialize the client without making network calls."""
@@ -51,7 +58,11 @@ class ZigStarGatewayApi:
         except ValueError as err:
             raise ZigStarGatewayConnectionError("Host is empty") from err
         self.host = self._base_url.removeprefix("http://").removeprefix("https://").rstrip("/")
+        self._username = username.strip() if username else None
+        self._password = password
         self._timeout = timeout
+        self._authenticated = False
+        self._cookie_header: str | None = None
         self._last_payload: dict[str, Any] | None = None
 
     @property
@@ -72,10 +83,48 @@ class ZigStarGatewayApi:
         payload = await self.async_fetch_status()
         return device_info_from_payload(self.host, payload)
 
+    async def async_login(self, *, force: bool = False) -> None:
+        """Authenticate against the XZG web UI and keep its session cookie."""
+        if self._authenticated and not force:
+            return
+        if not self._username or not self._password:
+            raise ZigStarGatewayAuthError("Gateway requires web UI credentials")
+        if force:
+            self._authenticated = False
+            self._cookie_header = None
+
+        # XZG firmware uses the same HTML form as the browser UI. A successful
+        # login returns a redirect to "/" plus Set-Cookie: XZG_UID=<sha1 token>.
+        payload = {
+            "username": self._username,
+            "password": self._password,
+        }
+
+        try:
+            async with asyncio.timeout(self._timeout):
+                async with self._session.post(
+                    urljoin(self._base_url, "login"),
+                    data=payload,
+                    allow_redirects=False,
+                ) as response:
+                    cookie_header = _cookie_header_from_response(response)
+                    if response.status >= 400:
+                        response.raise_for_status()
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise ZigStarGatewayConnectionError(f"Unable to connect to {self.host}") from err
+
+        if not cookie_header:
+            raise ZigStarGatewayAuthError("Gateway rejected the supplied credentials")
+
+        self._cookie_header = cookie_header
+        self._authenticated = True
+
     async def async_fetch_status(self) -> dict[str, Any]:
         """Fetch and normalize the latest gateway status."""
         try:
             payload = await self._async_fetch_xzg_status()
+        except ZigStarGatewayAuthError:
+            raise
         except (ZigStarGatewayConnectionError, ValueError) as xzg_err:
             _LOGGER.debug("XZG API probe failed for %s: %s", self.host, xzg_err)
             payload = await self._async_fetch_legacy_status()
@@ -171,16 +220,71 @@ class ZigStarGatewayApi:
         self,
         method: str,
         path: str,
+        *,
+        retry_auth: bool = True,
     ) -> tuple[str, Any]:
         """Run an HTTP request and return body plus headers."""
         url = urljoin(self._base_url, path)
+        headers = {"Cookie": self._cookie_header} if self._cookie_header else None
         try:
             async with asyncio.timeout(self._timeout):
-                async with self._session.request(method, url) as response:
+                async with self._session.request(
+                    method,
+                    url,
+                    headers=headers,
+                    allow_redirects=False,
+                ) as response:
+                    if _response_asks_for_login(response):
+                        if retry_auth:
+                            self._authenticated = False
+                            await self.async_login(force=True)
+                            return await self._async_request_text_with_headers(
+                                method,
+                                path,
+                                retry_auth=False,
+                            )
+                        raise ZigStarGatewayAuthError("Gateway requires web UI credentials")
+
                     response.raise_for_status()
                     text = await response.text()
+                    if _looks_like_xzg_login_page(text):
+                        if retry_auth:
+                            self._authenticated = False
+                            await self.async_login(force=True)
+                            return await self._async_request_text_with_headers(
+                                method,
+                                path,
+                                retry_auth=False,
+                            )
+                        raise ZigStarGatewayAuthError("Gateway requires web UI credentials")
+
                     return text, response.headers
         except (aiohttp.ClientError, TimeoutError) as err:
             raise ZigStarGatewayConnectionError(
                 f"Unable to fetch {path or '/'} from {self.host}"
             ) from err
+
+
+def _cookie_header_from_response(response: aiohttp.ClientResponse) -> str | None:
+    """Build a Cookie header from Set-Cookie headers returned by XZG.
+
+    Home Assistant's shared aiohttp session uses the safe cookie policy, which
+    may ignore cookies set by IP-address hosts. XZG gateways are usually added
+    by IP, so the integration keeps the cookie value itself.
+    """
+    return cookie_header_from_set_cookie_headers(response.headers.getall("Set-Cookie", []))
+
+
+def _response_asks_for_login(response: aiohttp.ClientResponse) -> bool:
+    """Return true when XZG redirects an unauthenticated request to login."""
+    auth_header = response.headers.get("Authentication", "").casefold()
+    location = response.headers.get("Location", "").casefold()
+    return auth_header == "fail" or (
+        response.status in {301, 302, 303, 307, 308, 401, 403} and "/login" in location
+    )
+
+
+def _looks_like_xzg_login_page(text: str) -> bool:
+    """Return true when a gateway returned the XZG login HTML instead of data."""
+    lowered = text.casefold()
+    return "<html" in lowered and 'action="/login"' in lowered and 'name="password"' in lowered

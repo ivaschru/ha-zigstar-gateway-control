@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from html import unescape
+from http.cookies import SimpleCookie
 import json
 import re
 from typing import Any
@@ -107,6 +108,18 @@ def parse_xzg_json(text: str) -> dict[str, Any]:
     if not isinstance(parsed, dict):
         raise ValueError("XZG response is not a JSON object")
     return parsed
+
+
+def cookie_header_from_set_cookie_headers(headers: list[str]) -> str | None:
+    """Build a reusable Cookie header from one or more Set-Cookie headers."""
+    cookie = SimpleCookie()
+    for header in headers:
+        cookie.load(header)
+
+    if not cookie:
+        return None
+
+    return "; ".join(f"{name}={morsel.value}" for name, morsel in cookie.items())
 
 
 def parse_xzg_serial_settings(values: dict[str, Any] | None) -> dict[str, Any]:

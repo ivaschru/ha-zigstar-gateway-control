@@ -9,6 +9,7 @@ sys.path.insert(0, str(INTEGRATION_DIR))
 from parsing import (  # noqa: E402
     BACKEND_LEGACY_RUS,
     BACKEND_XZG,
+    cookie_header_from_set_cookie_headers,
     device_info_from_payload,
     normalize_xzg_payload,
     parse_duration_text,
@@ -78,6 +79,21 @@ def test_parse_xzg_root_payload() -> None:
     assert payload["serial_baud"] == 115200
     assert payload["zigbee_role"] == "Coordinator"
     assert payload["mqtt_connected"] is False
+
+
+def test_cookie_header_from_set_cookie_headers() -> None:
+    """Cookie parser keeps only reusable name/value pairs for follow-up calls."""
+    headers = [
+        "XZG_UID=session-token; Path=/; HttpOnly",
+        "theme=dark; SameSite=Lax",
+    ]
+
+    assert cookie_header_from_set_cookie_headers(headers) == "XZG_UID=session-token; theme=dark"
+
+
+def test_cookie_header_from_empty_headers() -> None:
+    """Missing Set-Cookie headers do not create an outbound Cookie header."""
+    assert cookie_header_from_set_cookie_headers([]) is None
 
 
 def test_xzg_device_info() -> None:
