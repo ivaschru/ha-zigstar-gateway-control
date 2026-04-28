@@ -5,7 +5,7 @@
 - This repository contains a Home Assistant custom integration for managing ZigStar Gateway and XZG gateway devices.
 - The integration is intended for HACS installation and local LAN operation.
 - Supported functionality starts deliberately narrow: monitoring gateway health plus restart control for XZG and legacy ZigStar GW RUS firmware.
-- XZG web UI authentication is supported through optional Home Assistant config flow credentials and an HTTP session cookie.
+- XZG web UI authentication is supported through optional Home Assistant config flow/options credentials and an HTTP session cookie.
 
 ## Repository Layout
 

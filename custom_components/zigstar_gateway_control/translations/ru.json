@@ -21,6 +21,23 @@
       "already_configured": "Этот gateway уже настроен"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Обновить аутентификацию ZigStar gateway",
+        "data": {
+          "username": "Имя пользователя веб-интерфейса",
+          "password": "Пароль веб-интерфейса"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Не удалось подключиться к gateway",
+      "credentials_incomplete": "Введите и имя пользователя, и пароль, либо оставьте оба поля пустыми",
+      "invalid_auth": "Не удалось пройти аутентификацию веб-интерфейса",
+      "unknown": "Неожиданная ошибка"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "socket_connected": {

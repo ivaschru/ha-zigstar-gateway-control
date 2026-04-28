@@ -21,6 +21,23 @@
       "already_configured": "This gateway is already configured"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update ZigStar gateway authentication",
+        "data": {
+          "username": "Web UI username",
+          "password": "Web UI password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the gateway",
+      "credentials_incomplete": "Enter both username and password, or leave both empty",
+      "invalid_auth": "Web UI authentication failed",
+      "unknown": "Unexpected error"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "socket_connected": {

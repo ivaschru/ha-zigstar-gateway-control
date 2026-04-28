@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,15 +20,48 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): selector.TextSelector(
+def _credential_fields(
+    *,
+    username: str = "",
+    password: str = "",
+) -> dict[vol.Optional, type | selector.TextSelector]:
+    """Return the optional web-auth fields shared by setup and options."""
+    return {
+        vol.Optional(CONF_USERNAME, default=username): str,
+        vol.Optional(CONF_PASSWORD, default=password): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
+
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        **_credential_fields(),
+    }
 )
+
+
+def _entry_value(entry: config_entries.ConfigEntry, key: str) -> str:
+    """Return data/options value for forms, preserving deliberate empty options."""
+    if key in entry.options:
+        return entry.options[key] or ""
+    return entry.data.get(key, "") or ""
+
+
+def _credentials_from_input(
+    user_input: dict[str, Any],
+    *,
+    include_empty: bool = False,
+) -> tuple[dict[str, str], str | None]:
+    """Normalize optional credentials and validate that they are a pair."""
+    username = user_input.get(CONF_USERNAME, "").strip()
+    password = user_input.get(CONF_PASSWORD, "")
+    if bool(username) != bool(password):
+        return {}, "credentials_incomplete"
+    if username and password or include_empty:
+        return {CONF_USERNAME: username, CONF_PASSWORD: password}, None
+    return {}, None
 
 
 async def _validate_input(
@@ -59,6 +92,14 @@ class ZigStarGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow used to update web-auth credentials."""
+        return ZigStarGatewayOptionsFlow(config_entry)
+
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -70,13 +111,11 @@ class ZigStarGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data = {
                 CONF_HOST: user_input[CONF_HOST].strip(),
             }
-            username = user_input.get(CONF_USERNAME, "").strip()
-            password = user_input.get(CONF_PASSWORD, "")
-            if bool(username) != bool(password):
-                errors["base"] = "credentials_incomplete"
-            elif username and password:
-                data[CONF_USERNAME] = username
-                data[CONF_PASSWORD] = password
+            credentials, error = _credentials_from_input(user_input)
+            if error:
+                errors["base"] = error
+            else:
+                data.update(credentials)
 
             if not errors:
                 try:
@@ -96,5 +135,55 @@ class ZigStarGatewayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+
+class ZigStarGatewayOptionsFlow(config_entries.OptionsFlow):
+    """Handle editable options for an existing ZigStar gateway entry."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Keep the entry so options can validate against its existing host."""
+        self._config_entry = config_entry
+
+    async def async_step_init(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Update optional XZG web UI credentials."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            data = {
+                CONF_HOST: self._config_entry.data[CONF_HOST],
+            }
+            credentials, error = _credentials_from_input(user_input, include_empty=True)
+            if error:
+                errors["base"] = error
+            else:
+                data.update(credentials)
+
+            if not errors:
+                try:
+                    await _validate_input(self.hass, data)
+                except ZigStarGatewayAuthError:
+                    errors["base"] = "invalid_auth"
+                except ZigStarGatewayConnectionError:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error while updating ZigStar gateway options")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_create_entry(title="", data=credentials)
+
+        data_schema = vol.Schema(
+            _credential_fields(
+                username=_entry_value(self._config_entry, CONF_USERNAME),
+                password=_entry_value(self._config_entry, CONF_PASSWORD),
+            )
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=data_schema,
             errors=errors,
         )

@@ -14,6 +14,13 @@ from .const import DOMAIN, PLATFORMS
 from .coordinator import ZigStarGatewayCoordinator
 
 
+def _entry_value(entry: ConfigEntry, key: str) -> str | None:
+    """Return a config entry value, letting options intentionally override data."""
+    if key in entry.options:
+        return entry.options[key]
+    return entry.data.get(key)
+
+
 @dataclass
 class ZigStarGatewayRuntimeData:
     """Runtime objects shared by the integration platforms."""
@@ -28,8 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = ZigStarGatewayApi(
         session=session,
         host=entry.data[CONF_HOST],
-        username=entry.data.get(CONF_USERNAME),
-        password=entry.data.get(CONF_PASSWORD),
+        username=_entry_value(entry, CONF_USERNAME),
+        password=_entry_value(entry, CONF_PASSWORD),
     )
 
     coordinator = ZigStarGatewayCoordinator(hass, entry, api)
@@ -42,8 +49,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator=coordinator,
     )
 
+    # Credential changes live in options, so reload the entry after Configure
+    # saves to rebuild the API client with the new username/password.
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the gateway entry after editable options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

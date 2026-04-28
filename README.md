@@ -76,6 +76,9 @@ enabled from the Home Assistant entity registry when needed.
 9. If XZG web server authentication is enabled, also enter the web UI username and password. Leave both fields empty for gateways without web authentication.
 10. Repeat the add integration flow for every additional gateway.
 
+For an already configured gateway, use the integration's **Configure** action
+to add, change, or clear the optional XZG web UI username and password.
+
 ## Manual Installation
 
 Copy `custom_components/zigstar_gateway_control` into your Home Assistant `custom_components` directory, then restart Home Assistant.
